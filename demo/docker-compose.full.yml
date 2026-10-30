@@ -1,0 +1,50 @@
+# 显式配置版：把关键参数写清楚，并挂载数据卷做持久化
+# 启动：docker compose -f docker-compose.full.yml up -d
+# 停止：docker compose -f docker-compose.full.yml down
+services:
+  kafka:
+    image: apache/kafka:4.4.0
+    container_name: kafka
+    hostname: kafka
+    ports:
+      - "9092:9092"
+    environment:
+      # ---- 节点与角色 ----
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      CLUSTER_ID: "5L6g3nShT-eMCtK--X86sw"
+
+      # ---- 监听地址 ----
+      # LISTENERS：进程实际监听的地址
+      # ADVERTISED_LISTENERS：告诉客户端用哪个地址回来连（本机客户端就是 localhost）
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+
+      # ---- KRaft 控制器投票节点 ----
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+
+      # ---- 单机必须把内部 topic 的副本数改成 1 ----
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+
+      # ---- 数据目录（与下面的 volume 保持一致，否则重启后数据丢失）----
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+
+      # ---- 开发环境方便起见，允许自动建 topic ----
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  kafka-data:

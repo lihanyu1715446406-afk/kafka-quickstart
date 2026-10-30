@@ -1,0 +1,10 @@
+# 最简单机 Kafka（KRaft 模式，无需 ZooKeeper）
+# 启动：docker compose up -d
+# 停止并删除：docker compose down
+services:
+  kafka:
+    image: apache/kafka:4.4.0
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    restart: unless-stopped

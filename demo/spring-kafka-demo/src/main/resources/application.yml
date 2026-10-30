@@ -1,0 +1,24 @@
+server:
+  # 用 8081，避免和本机常见的 8080 服务冲突
+  port: 8081
+
+spring:
+  application:
+    name: spring-kafka-demo
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+    consumer:
+      group-id: demo-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+    listener:
+      ack-mode: batch
+      missing-topics-fatal: false
